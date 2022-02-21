@@ -25,8 +25,6 @@ describe('Tokens manager tests.', () => {
         return properties.every(prop => prop !== undefined);
     };
 
-    beforeEach(async () => {}, 20_000);
-
     test('Should create Token object from struct', () => {
         const struct: TokenStruct = {
             blockchain: BLOCKCHAIN_NAME.ETHEREUM,
