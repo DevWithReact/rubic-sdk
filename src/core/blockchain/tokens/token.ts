@@ -17,7 +17,7 @@ export class Token {
     public static async createToken(tokenBaseStruct: TokenBaseStruct): Promise<Token> {
         const web3Public = Injector.web3PublicService.getWeb3Public(tokenBaseStruct.blockchain);
         const tokenInfo = await web3Public.callForTokenInfo(tokenBaseStruct.address);
-
+        console.log('token hase been found');
         if (tokenInfo.decimals == null || tokenInfo.name == null || tokenInfo.symbol == null) {
             throw new RubicSdkError('Error while loading token');
         }

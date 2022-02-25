@@ -1,6 +1,8 @@
 import { InstantTradesManager } from '@features/swap/instant-trades-manager';
 import { TokensManager } from '@features/tokens/tokens-manager';
 import { TOKENS } from '__tests__/utils/tokens';
+import { Chain } from '__tests__/utils/chain';
+import { mockInjector } from '__tests__/utils/mock-injector';
 import {
     BLOCKCHAIN_NAME,
     MAINNET_BLOCKCHAIN_NAME,
@@ -14,9 +16,12 @@ describe('Instant trade manager tests.', () => {
     let instantTradesManager: InstantTradesManager;
     const tokensManager = new TokensManager();
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const chain = await Chain.reset(BLOCKCHAIN_NAME.ETHEREUM);
+        const configuration = await chain.getConfiguration();
+        await mockInjector(configuration);
         instantTradesManager = new InstantTradesManager();
-    });
+    }, 5000);
 
     test('Should init params', () => {
         expect(InstantTradesManager.defaultCalculationTimeout).toBeDefined();
@@ -37,63 +42,47 @@ describe('Instant trade manager tests.', () => {
         });
     });
 
-    test('Should throw blockchain error trade', () => {
+    test('Should throw blockchain error trade', async () => {
         const fromToken1 = {
             address: '0x0000000000000000000000000000000000000000',
             blockchain: MAINNET_BLOCKCHAIN_NAME.ETHEREUM
         };
-        const fromToken2 = {
-            address: '0x0000000000000000000000000000000000000000',
-            blockchain: MAINNET_BLOCKCHAIN_NAME.POLYGON
-        };
         const toToken1 = tokensManager.createTokenFromStruct({
-            address: '0x0000000000000000000000000000000000000000',
-            blockchain: BLOCKCHAIN_NAME.ETHEREUM,
-            name: 'Ethereum',
-            symbol: 'ETH',
-            decimals: 18
-        });
-        const toToken2 = tokensManager.createTokenFromStruct({
             address: '0x0000000000000000000000000000000000000000',
             blockchain: BLOCKCHAIN_NAME.POLYGON,
             name: 'Matic',
-            symbol: 'Matic',
+            symbol: 'MATIC',
             decimals: 18
         });
 
-        const errorMsg = 'Blockchains of from and to tokens must be same.';
-
-        const call1 = instantTradesManager.calculateTrade(fromToken1, '1', toToken1);
-        expect(call1).toThrow(RubicSdkError);
-        expect(call1).toThrow(errorMsg);
-
-        const call2 = instantTradesManager.calculateTrade(fromToken2, '1', toToken2);
-        expect(call2).toThrow(RubicSdkError);
-        expect(call2).toThrow(errorMsg);
-    });
+        try {
+            await instantTradesManager.calculateTrade(fromToken1, '1', toToken1);
+        } catch (err) {
+            const errorMsg = 'Blockchains of from and to tokens must be same.';
+            expect(err instanceof RubicSdkError).toBeTruthy();
+            expect(err.message).toBe(errorMsg);
+        }
+    }, 20_000);
 
     test('Should calculate trade without options', async () => {
-        const getFullOptionsSpy = spyOn(
-            InstantTradesManager as unknown as { getFullOptions: () => unknown },
+        const getFullOptionsSpy = jest.spyOn(
+            instantTradesManager as unknown as { getFullOptions: () => unknown },
             'getFullOptions'
         );
-        const trade = await instantTradesManager.calculateTrade(
-            TOKENS.ETH,
-            BLOCKCHAIN_NAME.ETHEREUM,
-            TOKENS.USDT
+        const calculateTradeFromTokensSpy = jest.spyOn(
+            instantTradesManager as unknown as { calculateTradeFromTokens: () => unknown },
+            'calculateTradeFromTokens'
         );
+
+        const trade = await instantTradesManager.calculateTrade(TOKENS.ETH, '1', TOKENS.USDT);
+
         expect(getFullOptionsSpy).toHaveBeenCalledWith(undefined);
         expect(getFullOptionsSpy).toHaveReturnedWith({
             timeout: InstantTradesManager.defaultCalculationTimeout,
             disabledProviders: [] as TradeType[]
         });
 
-        const calculateTradeFromTokensSpy = spyOn(
-            InstantTradesManager as unknown as { calculateTradeFromTokens: () => unknown },
-            'calculateTradeFromTokens'
-        );
         expect(calculateTradeFromTokensSpy).toHaveBeenCalled();
-
         expect(trade.some(provider => provider.to.tokenAmount.gt(0)));
     }, 20_000);
 
@@ -106,29 +95,22 @@ describe('Instant trade manager tests.', () => {
             return tradeProvider.blockchain === BLOCKCHAIN_NAME.ETHEREUM;
         });
 
-        const tradeCall = await instantTradesManager.calculateTrade(
-            TOKENS.ETH,
-            BLOCKCHAIN_NAME.ETHEREUM,
-            TOKENS.USDT,
-            {
+        try {
+            await instantTradesManager.calculateTrade(TOKENS.ETH, '1', TOKENS.USDT, {
                 disabledProviders: ethProviders as TradeType[]
-            }
-        );
-        const errorMsg = `There are no providers for ${BLOCKCHAIN_NAME.ETHEREUM} blockchain`;
-        expect(tradeCall).toThrow(RubicSdkError);
-        expect(tradeCall).toThrow(errorMsg);
+            });
+        } catch (err) {
+            const errorMsg = `There are no providers for ${BLOCKCHAIN_NAME.ETHEREUM} blockchain`;
+            expect(err instanceof RubicSdkError).toBeTruthy();
+            expect(err.message).toBe(errorMsg);
+        }
     }, 20_000);
 
     test('Should calculate trade for all providers except providers in block list', async () => {
         const disabledProviders: TradeType[] = [TRADE_TYPE.UNISWAP_V2];
-        const trades = await instantTradesManager.calculateTrade(
-            TOKENS.ETH,
-            BLOCKCHAIN_NAME.ETHEREUM,
-            TOKENS.USDT,
-            {
-                disabledProviders
-            }
-        );
-        expect(trades.every(trade => disabledProviders.includes(trade.type))).toBeTruthy();
+        const trades = await instantTradesManager.calculateTrade(TOKENS.ETH, '1', TOKENS.USDT, {
+            disabledProviders
+        });
+        expect(trades.every(trade => !disabledProviders.includes(trade.type))).toBeTruthy();
     }, 20_000);
 });

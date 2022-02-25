@@ -1,6 +1,6 @@
 import { BLOCKCHAIN_NAME } from '@core/blockchain/models/BLOCKCHAIN_NAME';
 import { SDK } from '@core/sdk/sdk';
-import { configuration } from '../utils/configuration';
+import { configuration } from '__tests__/utils/configuration';
 
 describe('Cross chain trades module tests', () => {
     let sdk: SDK;

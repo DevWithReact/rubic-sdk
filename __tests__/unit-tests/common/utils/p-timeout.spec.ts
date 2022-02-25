@@ -103,14 +103,16 @@ describe('p-timeout tests', () => {
 
     test('Accepts `customTimers` option', async () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const setTimeoutSpy = fn((_: number | undefined) => {});
+        const setTimeoutSpy = fn((_?: number | undefined) => {});
         const clearTimeoutSpy = fn();
 
         await pTimeout(delay(smallTimeout), bigTimeout, undefined, {
             customTimers: {
                 setTimeout: function (handler: () => void, timeout?: number) {
                     setTimeoutSpy(timeout);
-                    return setTimeout(handler as unknown as () => void, timeout);
+                    return timeout
+                        ? setTimeout(handler as unknown as () => void, timeout)
+                        : setTimeout(handler as unknown as () => void, 0);
                 } as typeof setTimeout,
                 clearTimeout(timeoutId) {
                     clearTimeoutSpy();

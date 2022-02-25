@@ -10,7 +10,7 @@ module.exports = {
     "node_modules/(ethereum-cryptography)/.+\\.(j|t)sx?$": "ts-jest",
   },
   transformIgnorePatterns: [ 'node_modules/((?!ethereum-cryptography)/.*)'],
-  testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  testMatch: ["**/__tests__/unit-tests/features/tokens/tokens-manager.spec.ts"],
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.test.json'

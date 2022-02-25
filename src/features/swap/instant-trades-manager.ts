@@ -67,7 +67,9 @@ export class InstantTradesManager {
         toToken: Token | string,
         options?: SwapManagerCalculationOptions
     ): Promise<InstantTrade[]> {
+        console.log(fromToken.blockchain, (toToken as Token).blockchain);
         if (toToken instanceof Token && fromToken.blockchain !== toToken.blockchain) {
+            console.log('TEST SUCCESS');
             throw new RubicSdkError('Blockchains of from and to tokens must be same.');
         }
 
@@ -76,8 +78,9 @@ export class InstantTradesManager {
             fromAmount.toString(),
             toToken
         );
+        const fullOptions = this.getFullOptions(options);
 
-        return this.calculateTradeFromTokens(from, to, this.getFullOptions(options));
+        return this.calculateTradeFromTokens(from, to, fullOptions);
     }
 
     private getFullOptions(

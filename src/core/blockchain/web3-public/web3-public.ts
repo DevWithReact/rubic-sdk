@@ -457,10 +457,13 @@ export class Web3Public {
         tokenAddress: string,
         tokenFields: SupportedTokenField[] = ['decimals', 'symbol', 'name']
     ): Promise<Partial<Record<SupportedTokenField, string>>> {
+        console.log(tokenAddress, tokenFields);
+        console.log(Web3Pure.isNativeAddress(tokenAddress));
         if (Web3Pure.isNativeAddress(tokenAddress)) {
             const nativeToken = nativeTokensList[this.blockchainName];
             return { ...nativeToken, decimals: nativeToken.decimals.toString() };
         }
+        console.log('watafak mazafak');
         const tokenFieldsPromises = tokenFields.map(method =>
             this.callContractMethod(tokenAddress, ERC20_TOKEN_ABI, method)
         );
