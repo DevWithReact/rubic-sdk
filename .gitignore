@@ -5,6 +5,5 @@
 /.data/
 /coverage/
 /__tests__/env.js
-/lib/
 /cache/
 /scripts/node.log

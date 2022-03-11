@@ -1,0 +1,11 @@
+import { UniswapV2AbstractTrade } from '../dexes/common/uniswap-v2-abstract/uniswap-v2-abstract-trade';
+import { OneinchTrade } from '../dexes/common/oneinch-common/oneinch-trade';
+import { ZrxTrade } from '../dexes/common/zrx-common/zrx-trade';
+import { InstantTrade } from '../instant-trade';
+import { UniswapV3AbstractTrade } from '../dexes/common/uniswap-v3-abstract/uniswap-v3-abstract-trade';
+import { AlgebraTrade } from '../dexes/polygon/algebra/algebra-trade';
+export declare function isUniswapV2LikeTrade(trade: InstantTrade): trade is UniswapV2AbstractTrade;
+export declare function isUniswapV3LikeTrade(trade: InstantTrade): trade is UniswapV3AbstractTrade;
+export declare function isOneInchLikeTrade(trade: InstantTrade): trade is OneinchTrade;
+export declare function isZrxLikeTradeLikeTrade(trade: InstantTrade): trade is ZrxTrade;
+export declare function isAlgebraTrade(trade: InstantTrade): trade is AlgebraTrade;
